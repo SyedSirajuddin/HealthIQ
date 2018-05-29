@@ -45,6 +45,7 @@ class GlycationDB:
 		glycolMonitor = list()
 		glycolLevel = 80
 		result = dict()
+		glycation = 0
 		for x in range(60*24):
 			# Check if there are still time remaining to process the food or excercise.
 			# If no excercise or eating took place within the last 1-2 hours, slowly
@@ -54,12 +55,13 @@ class GlycationDB:
 					glycolLevel -= 1
 				elif glycolLevel < 80:
 					glycolLevel += 1
+				
+				# Fix for percision errors
+				if abs(glycolLevel-80) < 1:
+					glycolLevel = 80
 		
 			# Check the time for each activity, if the time limit ends, we remove the
 			# remove the rate changes for said limit
-			
-			if glycolLevel == 79:
-				print ("HELLL NOOOO")
 			newList = []
 			for track in glycolMonitor:	
 				cnt, rate = track
@@ -67,14 +69,17 @@ class GlycationDB:
 				track = (cnt - 1, rate)
 				if track[0] > 0:
 					newList.append(track)
-				#else:
-					#glycolMonitor.remove(track)
-					#continue
+					
 			glycolMonitor = newList
 			
 			# Record the glycemic index for this time
-			result[x] = glycolLevel
+			if glycolLevel >= 150:
+				glycation += 1
 			
+			if glycolLevel < 0:
+				glycolLevel = 0
+			result[x] = glycolLevel
+
 			# Keep track for activity we do during this time
 			if x in self.ActivityDB:
 				activity = self.ActivityDB[x]
@@ -89,6 +94,7 @@ class GlycationDB:
 
 		#Write a csv file with time as the x axis and glycemic level as y access
 		self.__writeChart(fileName, result)
+		print ("Glycation found to be: " + str(glycation))
 		s = input('--> ')  
 	
 	def __writeChart(self, fileName, result):
@@ -111,6 +117,7 @@ if __name__ == "__main__":
 	gDB = GlycationDB("FoodDB.csv", "ExcerciseDB.csv")
 	gDB.addActivity(EATING, 400, 61)
 	gDB.addActivity(EXCERCISE, 820, 2)
+	gDB.addActivity(EXCERCISE, 850, 4)
 	gDB.addActivity(EATING, 1220, 11)
 	
 	gDB.produceGlycationChart("Test.csv")
