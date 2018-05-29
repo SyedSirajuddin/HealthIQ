@@ -34,7 +34,7 @@ class GlycationDB:
 		elif activityType == EXCERCISE:
 			if activityId in self.ExcerciseDB:
 				activity = self.FoodDB[activityId]
-				self.ActivityDB[time] = Activity(activityType, activityId, time, activity.index)
+				self.ActivityDB[time] = Activity(activityType, activityId, time, -1*activity.index)
 			else:
 				print("ERROR: Unrecognized excercise id of " + str(activityId))
 
@@ -57,6 +57,9 @@ class GlycationDB:
 		
 			# Check the time for each activity, if the time limit ends, we remove the
 			# remove the rate changes for said limit
+			
+			if glycolLevel == 79:
+				print ("HELLL NOOOO")
 			newList = []
 			for track in glycolMonitor:	
 				cnt, rate = track
@@ -89,15 +92,10 @@ class GlycationDB:
 		s = input('--> ')  
 	
 	def __writeChart(self, fileName, result):
-		#with open(fileName, 'wb') as csvfile:
-		#	writer = csv.writer(csvfile, delimiter=' ',
-		#							quotechar='|', quoting=csv.QUOTE_MINIMAL)
 		file = open(fileName,'w') 
 		for time, value in result.items():
-			#writer.writerow([str(time), str(value)])
 			file.write(str(time) + "," +str(value) + '\n')
-			#print (str(time) + " " +  str(value))
-
+			
 	def __parseActivityFile(self, fileName, activityType, dataBase):
 		first = True
 		with open(fileName, newline='') as csvfile:
@@ -112,6 +110,7 @@ class GlycationDB:
 if __name__ == "__main__":
 	gDB = GlycationDB("FoodDB.csv", "ExcerciseDB.csv")
 	gDB.addActivity(EATING, 400, 61)
+	gDB.addActivity(EXCERCISE, 820, 2)
 	gDB.addActivity(EATING, 1220, 11)
 	
 	gDB.produceGlycationChart("Test.csv")
