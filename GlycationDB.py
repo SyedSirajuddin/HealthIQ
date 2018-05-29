@@ -1,6 +1,7 @@
 import csv
+import sys
 EATING = 1
-EXCERCISE = 2
+EXCERCISE = -1
 
 class Activity:
 	def __init__(self, type, id, time, index):
@@ -12,13 +13,31 @@ class Activity:
 		return repr((self.type, self.id, self.time, self.index))
 
 class GlycationDB:
-	def __init__(self, excerciseIndexFile, foodIndexFile):
+	def __init__(self, foodDB, excerciseDB):
 		self.ActivityDB = dict()
+		self.FoodDB = dict()
+		self.ExcerciseDB = dict()
+		
+		self.__parseActivityFile(foodDB, EATING, self.FoodDB)
+		self.__parseActivityFile(excerciseDB, EXCERCISE, self.ExcerciseDB)
+		
 	
-	def addActivity(self, activity):
+	def addActivity(self, activityType, time, activityId):
 		# Not sure if multiple activities can be done at the same exact time. i.e. eating
 		# multiple foods or eating while exercising
-		self.ActivityDB[activity.time] = activity
+		if activityType == EATING:
+			if activityId in self.FoodDB:
+				activity = self.FoodDB[activityId]
+				self.ActivityDB[time] = Activity(activityType, activityId, time, activity.index)
+			else:
+				print("ERROR: Unrecognized food id of " + str(activityId))
+		elif activityType == EXCERCISE:
+			if activityId in self.ExcerciseDB:
+				activity = self.FoodDB[activityId]
+				self.ActivityDB[time] = Activity(activityType, activityId, time, activity.index)
+			else:
+				print("ERROR: Unrecognized excercise id of " + str(activityId))
+
 	
 	def produceGlycationChart(self, fileName):
 		# For the moment, I think having minute resolution for the chart works fairly
@@ -56,7 +75,7 @@ class GlycationDB:
 			# Keep track for activity we do during this time
 			if x in self.ActivityDB:
 				activity = self.ActivityDB[x]
-				if (activity.type == 1):
+				if (activity.type == EATING):
 					rate = activity.index/120
 					timeCnt = 120
 					glycolMonitor.append((timeCnt, rate))
@@ -77,20 +96,23 @@ class GlycationDB:
 		for time, value in result.items():
 			#writer.writerow([str(time), str(value)])
 			file.write(str(time) + "," +str(value) + '\n')
-			print (str(time) + " " +  str(value))
+			#print (str(time) + " " +  str(value))
 
-	#def __parseActivityFile(self, fileName, activityType):
-	#	with open(fileName, 'rb') as csvfile:
-	#		data = csv.reader(csvfile, quotechar='"', delimiter=',',quoting=csv.QUOTE_ALL):
-	#		for row in data:
+	def __parseActivityFile(self, fileName, activityType, dataBase):
+		first = True
+		with open(fileName, newline='') as csvfile:
+			reader = csv.reader(csvfile, quotechar='"', delimiter=',',quoting=csv.QUOTE_ALL)
+			for row in reader:
+				if first:
+					first = False
+					continue
+				dataBase[int(row[0])] = Activity(activityType, int(row[0]), row[1].encode('utf-8'), int(row[2])*activityType)
+
 	
 if __name__ == "__main__":
-	gDB = GlycationDB("Eating", "Excercise")
-# type, id, time, index
-	lunch = Activity(1, 1, 400, 60)
-	gDB.addActivity(lunch)
-	dinner = Activity(1, 1, 1320, 60)
-	gDB.addActivity(dinner)
+	gDB = GlycationDB("FoodDB.csv", "ExcerciseDB.csv")
+	gDB.addActivity(EATING, 400, 61)
+	gDB.addActivity(EATING, 1220, 11)
 	
 	gDB.produceGlycationChart("Test.csv")
 	
