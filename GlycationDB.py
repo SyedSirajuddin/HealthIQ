@@ -73,7 +73,7 @@ class GlycationDB:
 			glycolMonitor = newList
 			
 			# Record the glycemic index for this time
-			if glycolLevel >= 150:
+			if round(glycolLevel) >= 150:
 				glycation += 1
 			
 			if glycolLevel < 0:
@@ -115,6 +115,9 @@ class GlycationDB:
 	
 if __name__ == "__main__":
 	gDB = GlycationDB("FoodDB.csv", "ExcerciseDB.csv")
+	gDB.addActivity(EATING, 100, 61)
+	gDB.addActivity(EXCERCISE, 150, 4)
+	
 	gDB.addActivity(EATING, 400, 61)
 	gDB.addActivity(EXCERCISE, 820, 2)
 	gDB.addActivity(EXCERCISE, 850, 4)
